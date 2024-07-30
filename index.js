@@ -1,10 +1,9 @@
 const express = require("express");
 const app = express();
-const mongoose = require("mongoose");
-const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
-const bcrypt = require("bcrypt");
+
 const connectDB = require('./connect')
+//connected to mongo
+connectDB();
 
 //Routers
 const adminRouter = require('./routes/admin')
@@ -26,9 +25,6 @@ app.use('/user', userRouter.router)
 app.use('/admin', adminRouter.router)
 app.use('/', productRouter.router)
 app.use('/categories', categoryRouter.router)
-
-//connected to mongo
-connectDB();
 
 
 app.listen(PORT, () => {
