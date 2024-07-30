@@ -1,11 +1,15 @@
 const express = require("express");
 const app = express();
-const PORT = process.env.PORT;
 
 const connectDB = require('./connect')
-//connected to mongo
-connectDB();
 
+//Routers
+const adminRouter = require('./routes/admin')
+const productRouter = require('./routes/product') 
+const userRouter = require('./routes/user')
+const categoryRouter = require('./routes/category')
+
+const PORT = process.env.PORT;
 
 require("./models/userDetail");
 
@@ -15,31 +19,13 @@ app.use(express.json());
 // static files from uploads
 app.use('/uploads', express.static('uploads'));
 
-
-//Admin routes
-const adminRouter = require('./routes/admin')
-app.use('/admin', adminRouter.router)
-
-//Product routes
-const productRouter = require('./routes/product')
-app.use('/', productRouter.router)
-
-//User routes
-const userRouter = require('./routes/user')
 app.use('/user', userRouter.router)
-
-// Category routes
-const categoryRouter = require('./routes/category')
+app.use('/admin', adminRouter.router)
+app.use('/', productRouter.router)
 app.use('/categories', categoryRouter.router)
 
-
-
-
-
-
-
-
-
+//connected to mongo
+connectDB();
 
 
 app.listen(PORT, () => {
