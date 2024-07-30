@@ -4,6 +4,7 @@ const Product = require("../models/productDetails");
 const upload = require("../middleware/multerConfig");
 const path = require('path'); //
 const PORT = process.env.PORT;
+const cloudinary = require('../config/cloudinary') //
 
 //CREATE PRODUCT
 exports.createProduct = async (req, res) => {
@@ -17,19 +18,16 @@ exports.createProduct = async (req, res) => {
             return res.status(500).json({ message: "File upload failed." });
           }
         }
-        const baseUrl = `${req.protocol}://${req.hostname}:${PORT}`;
-        const uploadDir = path.join(__dirname, 'uploads')
-        const relativePath = path.relative(
-            __dirname, 
-            path.join(uploadDir, req.file.filename)
-        )
         
         const { productName, productDescription, categoryId } = req.body;
         // const productImage = req.file ? req.file.path : "";
-  
+       
+        const result = await cloudinary.uploader.upload(req.file.path)
+        const productImage = result.secure_url
+
         const newProduct = new Product({
           productName,
-          productImage:`${baseUrl}/${relativePath}`, 
+          productImage, 
           productDescription,
           category: categoryId,
         })
@@ -83,31 +81,51 @@ exports.getProductById = async (req, res) => {
   }
 };
 
+
 // UPDATE PRODUCT
 exports.updateProduct = async (req, res) => {
-  try {
-    const productId = req.params.productId;
-    const { productName, productImage, productDescription, categoryId } = req.body;
-
-    const updatedProduct = await Product.findByIdAndUpdate(productId, {
-      productName,
-      productImage,
-      productDescription,
-      category: categoryId,
-    },
-    {new: true}
-  );
-
-    if (!updatedProduct) {
-      return res.status(404).json({ message: "Product not found" });
+  upload.single("productImage")(req, res, async (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError) {
+        return res.status(400).json({ message: err.message });
+      } else {
+        console.error("Error uploading file:", err);
+        return res.status(500).json({ message: "File upload failed." });
+      }
     }
-    
-    res.json(updatedProduct);
 
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-    console.log(error);
-  }
+    try {
+      const productId = req.params.productId;
+      const { productName, productDescription, categoryId } = req.body;
+
+      let updatedProductImage = req.body.productImage;
+
+      if (req.file) {
+        const result = await cloudinary.uploader.upload(req.file.path);
+        updatedProductImage = result.secure_url;
+      }
+
+      const updatedProduct = await Product.findByIdAndUpdate(
+        productId,
+        {
+          productName,
+          productImage: updatedProductImage,
+          productDescription,
+          category: categoryId,
+        },
+        { new: true }
+      );
+
+      if (!updatedProduct) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      res.json(updatedProduct);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+      console.log(error);
+    }
+  });
 };
 
 //DELETE PRODUCT
