@@ -48,7 +48,7 @@ exports.listAllProducts = async (req, res) => {
     const limit = parseInt(req.query.limit) || 3
     const skip = (page - 1) * limit
     //for sort
-    const sortOrder = req.query.sort === 'desc' ? -1 : 1
+    const sortOrder = parseInt(req.query.sort) || 1; //changed  
 
     const products = await Product.find().populate('category').skip(skip).limit(limit).sort({ productName: sortOrder })
     const totalProducts = await Product.countDocuments()
