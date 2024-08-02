@@ -15,7 +15,8 @@ const userDetailSchema = mongoose.Schema({
   
   //for admin forgot id
   resetPasswordToken: String,
-  resetPasswordExpires: Date 
+  // resetPasswordExpires: Date 
 });
 
-module.exports = User = mongoose.model("UserInfo", userDetailSchema);
+const  User = mongoose.model("UserInfo", userDetailSchema); // changed UserInfo to User <--
+module.exports = User

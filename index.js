@@ -2,9 +2,11 @@ const express = require("express");
 const app = express();
 const connectDB = require('./connect')
 
+//connected to mongo
+connectDB();
+
 // const swaggerUi = require('swagger-ui-express')
 // const swaggerSpec = require('./swaggerOptions')
-
 
 //Routers
 const adminRouter = require('./routes/admin')
@@ -29,9 +31,6 @@ app.use('/user', userRouter.router)
 app.use('/admin', adminRouter.router)
 app.use('/', productRouter.router)
 app.use('/categories', categoryRouter.router)
-
-//connected to mongo
-connectDB();
 
 
 app.listen(PORT, () => {

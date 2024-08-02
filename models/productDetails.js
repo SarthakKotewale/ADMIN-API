@@ -16,7 +16,23 @@ const productDetailSchema = mongoose.Schema({
         // type: String,
         ref: "Category",
         required: true
-    }
+    },
+    //review
+    reviews: [
+        {   
+            // type: String
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Review"
+        }
+    ],
+    //rating
+    ratings: [
+        {
+            
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Rating"
+        }
+    ]
 })
 
 module.exports = Product = mongoose.model('Product', productDetailSchema)

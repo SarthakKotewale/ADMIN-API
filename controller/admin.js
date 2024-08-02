@@ -1,6 +1,5 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-// const JWT_SECRET = "secretkey"; //env
 const JWT_SECRET = process.env.JWT_SECRET;
 const nodemailer = require('nodemailer')
 
@@ -17,7 +16,7 @@ exports.adminLogin = async (req, res) => {
     }
     if (await bcrypt.compare(password, admin.password)) {
       const token = jwt.sign(
-        { email: admin.email, role: admin.role }, JWT_SECRET
+        { email: admin.email, role: admin.role }, JWT_SECRET,{expiresIn: '2h'}
       )
       res.status(201).json({ status: "ok", data: token });
     } else {
@@ -41,7 +40,7 @@ exports.adminRegister = async (req, res) => {
       role: "admin", 
     });
     await admin.save();
-    res.json({ status: "ok", message: "Admin registered successfully" });
+    res.json({ status: "ok", message: `Admin ${name} registered successfully` });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Registration failed" });
@@ -49,13 +48,13 @@ exports.adminRegister = async (req, res) => {
 };
 
 
-//TRANSPORTER ETHEREAL
+
 const transporter = nodemailer.createTransport({
-  host: 'smtp.ethereal.email',
+  host: 'smtp.gmail.com',
   port: 587,
   auth: {
-      user: 'brook.swift@ethereal.email',
-      pass: 'hTCPGEYXuNA5HGhkTH'
+      user: 'sarthak.k@latitudetechnolabs.org',
+      pass: 'kogyqkxhzrimfapx'
   }
 });
 
@@ -68,7 +67,6 @@ exports.forgotAdminPassword = async(req, res) => {
       return res.status(404).json({ message: 'Admin not found with this email' });
     }
 
-    // Generate a reset token using jwt.sign (include admin ID and role) //<---
     const resetToken = jwt.sign({ id: admin._id, role: admin.role }, JWT_SECRET, { 
       expiresIn: '2h'
     });
@@ -76,15 +74,15 @@ exports.forgotAdminPassword = async(req, res) => {
     admin.resetPasswordToken = resetToken;
     await admin.save();
 
-    const resetUrl = `http://localhost:3400/reset-password/${admin._id}/${resetToken}`
+    const resetUrl = `http://localhost:3400/admin/reset-password/${admin._id}/${resetToken}`
 
     const mailOptions = {
-      from: "brook.swift@ethereal.email",
+      from: "sarthak.k@latitudetechnolabs.org",
       to: email,
       subject: "Password Reset Link",
       html: `<p>You requested for a password reset, click <a href="${resetUrl}">here</a> to reset your password</p>`,
     };
-    await transporter.sendMail(mailOptions);
+    await transporter.sendMail(mailOptions)
     res.status(200).json({ message: 'Password reset link sent to your email' });
   }catch(error){
     res.status(500).json({ message: error.message });
@@ -95,12 +93,10 @@ exports.forgotAdminPassword = async(req, res) => {
 exports.resetAdminPassword = async (req, res) => {
   const { id, token } = req.params;
   const { newPassword } = req.body;
-
   try {
     const admin = await User.findOne({ 
       _id: id, 
-      resetPasswordToken: token, 
-      // resetPasswordExpires: { $gt: Date.now() } // Check if token is not expired //? <----------
+      resetPasswordToken: token,
     });
 
     if (!admin) {
@@ -112,13 +108,12 @@ exports.resetAdminPassword = async (req, res) => {
 
     admin.password = hashedPassword;
     admin.resetPasswordToken = undefined; 
-    admin.resetPasswordExpires = undefined; 
     await admin.save();
 
     res.json({ status: "ok", message: "Password updated successfully" });
 
   } catch (error) {
-    console.error(error);
+    console.log(error);
     res.status(400).json({ error: "Invalid or expired token" });
   }
 };
